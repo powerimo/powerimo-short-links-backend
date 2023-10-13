@@ -1,15 +1,19 @@
 package org.powerimo.shortlinks.server.services;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
+import org.powerimo.shortlinks.server.exceptions.InvalidArgument;
 import org.powerimo.shortlinks.server.persistance.entities.LinkEntity;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -30,17 +34,23 @@ public class LinkService {
     private int counter = 0;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-
     public String addLink(String url) {
-        var data =  add(LinkRequest.builder()
+        var data = add(LinkRequest.builder()
                 .url(url)
                 .ttl(appConfig.getDefaultTtl())
                 .build());
         return appConfig.getDomain() + "/" + data.getCode();
     }
 
-    public LinkEntity add(LinkRequest request) {
+    public LinkEntity add(@NonNull LinkRequest request) {
         log.debug("link request: {}", request);
+        if (request.getUrl() == null)
+            throw new InvalidArgument("URL must be not empty");
+        request.setUrl(request.getUrl().trim());
+        if (!isValidUrl(request.getUrl())) {
+            throw new InvalidArgument("URL is not valid");
+        }
+
         var hash = calculateHash(request.getUrl());
         log.debug("link hash: {} : {}",hash, request.getUrl() );
 
@@ -152,5 +162,16 @@ public class LinkService {
                 .ttl(entity.getTtl())
                 .url(entity.getUrl())
                 .build();
+    }
+
+    public static boolean isValidUrl(String url) {
+        try {
+            new URL(url);
+
+            return url.regionMatches(true, 0, "http://", 0, 7) ||
+                    url.regionMatches(true, 0, "https://", 0, 8);
+        } catch (MalformedURLException e) {
+            return false;
+        }
     }
 }
