@@ -6,3 +6,9 @@ spring:
     change-log: classpath:/db/liquibase/changeset.xml
   jpa:
     open-in-view: false
+
+graylog:
+  app-id: short-links-server
+  env: dev
+  host: 127.0.0.1
+  port: 1111

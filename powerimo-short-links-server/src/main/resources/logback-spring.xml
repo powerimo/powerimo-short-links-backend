@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-<!--    <springProperty scope="context" name="app_id" source="tocl.app-id"/>
-    <springProperty scope="context" name="app_env" source="tocl.env"/>
+    <springProperty scope="context" name="app_id" source="graylog.app-id"/>
+    <springProperty scope="context" name="app_env" source="graylog.env"/>
     <springProperty scope="context" name="graylog_host" source="graylog.host"/>
-    <springProperty scope="context" name="graylog_port" source="graylog.port"/>-->
+    <springProperty scope="context" name="graylog_port" source="graylog.port"/>
 
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
