@@ -14,7 +14,7 @@
         </encoder>
     </appender>
 
-<!--    <appender name="GELF" class="de.siegmar.logbackgelf.GelfUdpAppender">
+    <appender name="GELF" class="de.siegmar.logbackgelf.GelfUdpAppender">
         <graylogHost>${graylog_host}</graylogHost>
         <graylogPort>${graylog_port}</graylogPort>
         <maxChunkSize>508</maxChunkSize>
@@ -42,7 +42,7 @@
             <staticField>os_name:${os.name}</staticField>
             <staticField>os_version:${os.version}</staticField>
         </encoder>
-    </appender>-->
+    </appender>
 
     <!-- LOG everything at INFO level -->
     <root level="info">
