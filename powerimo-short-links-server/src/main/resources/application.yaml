@@ -1,0 +1,8 @@
+app:
+  domain: http://localhost:8080
+
+spring:
+  liquibase:
+    change-log: classpath:/db/liquibase/changeset.xml
+  jpa:
+    open-in-view: false
