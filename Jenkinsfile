@@ -43,7 +43,7 @@ pipeline {
             }
             steps {
                 sh 'echo ${IMG_SERVER}:$BUILD_VERSION'
-                sh 'docker build -t ${IMG_SERVER}:$BUILD_VERSION -t ${IMG_SERVER}:${MAJOR_VERSION} ./powerimo-short-links-setver'
+                sh 'docker build -t ${IMG_SERVER}:$BUILD_VERSION -t ${IMG_SERVER}:${MAJOR_VERSION} ./powerimo-short-links-server'
                 sh 'docker push ${IMG_SERVER}:$BUILD_VERSION'
                 sh 'docker push ${IMG_SERVER}:${MAJOR_VERSION} '
             }
