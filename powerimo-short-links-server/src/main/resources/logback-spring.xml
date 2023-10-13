@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+<!--    <springProperty scope="context" name="app_id" source="tocl.app-id"/>
+    <springProperty scope="context" name="app_env" source="tocl.env"/>
+    <springProperty scope="context" name="graylog_host" source="graylog.host"/>
+    <springProperty scope="context" name="graylog_port" source="graylog.port"/>-->
+
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                %yellow(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] [%-70.70(%yellow(%.30class{25})::%cyan(%.40M{30}):%L)]: %msg%n%throwable
+            </pattern>
+        </encoder>
+    </appender>
+
+<!--    <appender name="GELF" class="de.siegmar.logbackgelf.GelfUdpAppender">
+        <graylogHost>${graylog_host}</graylogHost>
+        <graylogPort>${graylog_port}</graylogPort>
+        <maxChunkSize>508</maxChunkSize>
+        <useCompression>true</useCompression>
+        <messageIdSupplier class="de.siegmar.logbackgelf.MessageIdSupplier"/>
+        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
+            <originHost>localhost</originHost>
+            <includeRawMessage>false</includeRawMessage>
+            <includeMarker>true</includeMarker>
+            <includeMdcData>true</includeMdcData>
+            <includeCallerData>true</includeCallerData>
+            <includeRootCauseData>false</includeRootCauseData>
+            <includeLevelName>false</includeLevelName>
+            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%nopex</pattern>
+            </shortPatternLayout>
+            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%m%n</pattern>
+            </fullPatternLayout>
+            <numbersAsString>false</numbersAsString>
+            <staticField>env_id:${app_env}</staticField>
+            <staticField>app_id:${app_id}</staticField>
+            <staticField>app_eid:${app_id}-${app_env}</staticField>
+            <staticField>os_arch:${os.arch}</staticField>
+            <staticField>os_name:${os.name}</staticField>
+            <staticField>os_version:${os.version}</staticField>
+        </encoder>
+    </appender>-->
+
+    <!-- LOG everything at INFO level -->
+    <root level="info">
+        <appender-ref ref="Console"/>
+        <!--<appender-ref ref="GELF"/>-->
+    </root>
+
+    <logger name="org.powerimo" level="debug" additivity="false">
+        <appender-ref ref="Console"/>
+        <!--<appender-ref ref="GELF"/>-->
+    </logger>
+
+</configuration>
