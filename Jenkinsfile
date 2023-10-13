@@ -33,7 +33,8 @@ pipeline {
         }
         stage("Deploy artifacts to Nexus") {
             steps {
-                sh 'mvn -DskipTests=true deploy'
+                sh 'echo skipped'
+                // sh 'mvn -DskipTests=true deploy'
             }
         }
         stage('Docker images') {
