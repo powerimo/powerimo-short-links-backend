@@ -1,5 +1,6 @@
 package org.powerimo.shortlinks.server.services;
 
+import eu.bitwalker.useragentutils.UserAgent;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -7,11 +8,15 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
+import org.powerimo.shortlinks.server.events.LinkHitEvent;
 import org.powerimo.shortlinks.server.exceptions.InvalidArgument;
 import org.powerimo.shortlinks.server.persistance.entities.LinkEntity;
 import org.powerimo.shortlinks.server.persistance.entities.LinkHitEntity;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkHitRepository;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkRepository;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,10 +32,12 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
-public class LinkService {
+public class LinkService implements ApplicationListener<LinkHitEvent> {
     private final AppConfig appConfig;
     private final LinkRepository linkRepository;
     private final LinkHitRepository linkHitRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public String addLink(String url) {
@@ -144,8 +151,8 @@ public class LinkService {
     public String hitLink(String code, HttpServletRequest request) {
         var opt = linkRepository.findFirstByCode(code);
         if (opt.isPresent()) {
-            addHitLinkEntity(code, request);
-            linkRepository.incrementGetCount(code);
+            var userAgent = request.getHeader("User-Agent");
+            applicationEventPublisher.publishEvent(new LinkHitEvent(this, code, userAgent, request.getRemoteHost()));
             log.info("link hit: {}", code);
             return opt.get().getUrl();
         } else {
@@ -153,12 +160,22 @@ public class LinkService {
         }
     }
 
-    private void addHitLinkEntity(String code, HttpServletRequest request) {
+    private void addHitLinkEntity(String code, String agentString, String remoteHost) {
+        UserAgent userAgent = new UserAgent(agentString);
+        var osName = userAgent.getOperatingSystem() != null ? userAgent.getOperatingSystem().getName() : null;
+        var browser = userAgent.getBrowser() != null ? userAgent.getBrowser().getName() : null;
+        var browserVersion = userAgent.getBrowserVersion() != null ? userAgent.getBrowserVersion().getVersion() : null;
+
         var entity = LinkHitEntity.builder()
                 .code(code)
-                .host(request.getRemoteHost())
+                .host(remoteHost)
+                .agentString(agentString)
+                .extractedOsVersion(osName)
+                .extractedBrowser(browser)
+                .extractedBrowserVersion(browserVersion)
                 .build();
-        linkHitRepository.save(entity);
+        entity = linkHitRepository.save(entity);
+        log.info("LinkHitEntity added: {}", entity);
     }
 
     public String noLinkUrl(String code) {
@@ -184,4 +201,12 @@ public class LinkService {
             return false;
         }
     }
+
+    @Override
+    public void onApplicationEvent(LinkHitEvent event) {
+        log.trace("LinkHitEvent: {}", event);
+        addHitLinkEntity(event.getCode(), event.getAgentString(), event.getRemoteHost());
+        linkRepository.incrementGetCount(event.getCode());
+    }
+
 }

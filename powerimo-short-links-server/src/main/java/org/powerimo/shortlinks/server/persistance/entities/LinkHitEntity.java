@@ -21,6 +21,10 @@ public class LinkHitEntity {
     private String code;
     private String host;
     private String agentString;
+    private String extractedOsName;
+    private String extractedOsVersion;
+    private String extractedBrowser;
+    private String extractedBrowserVersion;
 
     @Column(insertable = false, updatable = false)
     private Instant createdAt;
