@@ -3,8 +3,10 @@ package org.powerimo.shortlinks.server.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.powerimo.shortlinks.server.AppConst;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.services.LinkService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -26,6 +28,11 @@ public class LinksController {
         return LinkService.convert(data);
     }
 
+    @GetMapping(AppConst.NOT_FOUND_PATH)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String getNotFound() {
+        return "NOT FOUND";
+    }
 
     @GetMapping("{code}")
     public void getLink(HttpServletRequest request,
@@ -34,4 +41,5 @@ public class LinksController {
         var real = linkService.hitLink(code, request);
         response.sendRedirect(real);
     }
+
 }

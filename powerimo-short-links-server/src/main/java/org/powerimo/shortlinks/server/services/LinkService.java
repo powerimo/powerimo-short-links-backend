@@ -6,6 +6,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.powerimo.shortlinks.server.AppConst;
 import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.events.LinkHitEvent;
@@ -182,7 +183,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
     }
 
     public String noLinkUrl(String code) {
-        return "No link for: " + code;
+        return appConfig.getDomain() + "/" + AppConst.NOT_FOUND_PATH;
     }
 
     public static LinkRequest convert(LinkEntity entity) {
