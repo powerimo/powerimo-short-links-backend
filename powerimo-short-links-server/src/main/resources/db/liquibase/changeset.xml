@@ -11,5 +11,9 @@
         <sqlFile path="db/liquibase/v1.0/000/tables.sql" splitStatements="false"/>
         <sqlFile path="db/liquibase/v1.0/000/triggers.sql" splitStatements="false"/>
     </changeSet>
+    <changeSet id="1.001" author="voronin">
+        <sqlFile path="db/liquibase/v1.0/001/tables.sql" splitStatements="false"/>
+        <sqlFile path="db/liquibase/v1.0/001/triggers.sql" splitStatements="false"/>
+    </changeSet>
 </databaseChangeLog>
 

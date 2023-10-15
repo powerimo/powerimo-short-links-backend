@@ -1,5 +1,6 @@
 package org.powerimo.shortlinks.server.services;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -8,6 +9,8 @@ import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.exceptions.InvalidArgument;
 import org.powerimo.shortlinks.server.persistance.entities.LinkEntity;
+import org.powerimo.shortlinks.server.persistance.entities.LinkHitEntity;
+import org.powerimo.shortlinks.server.persistance.repositories.LinkHitRepository;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +22,6 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -30,8 +30,7 @@ import java.util.Optional;
 public class LinkService {
     private final AppConfig appConfig;
     private final LinkRepository linkRepository;
-    private final Map<String, String> cacheLinks = new HashMap<>();
-    private int counter = 0;
+    private final LinkHitRepository linkHitRepository;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public String addLink(String url) {
@@ -78,16 +77,6 @@ public class LinkService {
         return entity;
     }
 
-    public boolean isLinkExists(String url) {
-        return findLink(url).isPresent();
-    }
-
-    public Optional<Map.Entry<String, String>> findLink(String url) {
-        return cacheLinks.entrySet().stream()
-                .filter(item -> item.getValue().equals(url))
-                .findFirst();
-    }
-
     public String createCode() {
         int tryCount = 0;
         boolean isFree = false;
@@ -125,16 +114,15 @@ public class LinkService {
     @SneakyThrows
     public String calculateHash(String s) {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] encodedhash = digest.digest(
-                s.getBytes(StandardCharsets.UTF_8));
-        return bytesToHex(encodedhash);
+        byte[] encodedHash = digest.digest(s.getBytes(StandardCharsets.UTF_8));
+        return bytesToHex(encodedHash);
     }
 
     private static String bytesToHex(byte[] hash) {
         StringBuilder hexString = new StringBuilder(2 * hash.length);
-        for (int i = 0; i < hash.length; i++) {
-            String hex = Integer.toHexString(0xff & hash[i]);
-            if(hex.length() == 1) {
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
                 hexString.append('0');
             }
             hexString.append(hex);
@@ -153,6 +141,26 @@ public class LinkService {
         }
     }
 
+    public String hitLink(String code, HttpServletRequest request) {
+        var opt = linkRepository.findFirstByCode(code);
+        if (opt.isPresent()) {
+            addHitLinkEntity(code, request);
+            linkRepository.incrementGetCount(code);
+            log.info("link hit: {}", code);
+            return opt.get().getUrl();
+        } else {
+            return noLinkUrl(code);
+        }
+    }
+
+    private void addHitLinkEntity(String code, HttpServletRequest request) {
+        var entity = LinkHitEntity.builder()
+                .code(code)
+                .host(request.getRemoteHost())
+                .build();
+        linkHitRepository.save(entity);
+    }
+
     public String noLinkUrl(String code) {
         return "No link for: " + code;
     }
@@ -166,8 +174,10 @@ public class LinkService {
 
     public static boolean isValidUrl(String url) {
         try {
+            // check the string could be used as URL object
             new URL(url);
 
+            // check the link contains the correct protocol prefix
             return url.regionMatches(true, 0, "http://", 0, 7) ||
                     url.regionMatches(true, 0, "https://", 0, 8);
         } catch (MalformedURLException e) {

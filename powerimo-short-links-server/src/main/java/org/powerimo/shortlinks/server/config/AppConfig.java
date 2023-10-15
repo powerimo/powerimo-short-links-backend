@@ -13,5 +13,9 @@ public class AppConfig {
     @Value("${app.domain}")
     private String domain;
 
-    private int defaultTtl = 300;
+    @Value("${app.ttl:30}")
+    private int defaultTtl = 30;
+
+    @Value("${app.stat-interval:5}")
+    private int statInterval;
 }

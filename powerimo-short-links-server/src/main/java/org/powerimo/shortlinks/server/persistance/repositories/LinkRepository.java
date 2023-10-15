@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.sql.Timestamp;
 import java.util.Optional;
 
 public interface LinkRepository extends CrudRepository<LinkEntity, String> {
@@ -15,4 +16,7 @@ public interface LinkRepository extends CrudRepository<LinkEntity, String> {
     @Query(nativeQuery = true, value = "update link set get_count=get_count+1 where code=?")
     @Modifying
     void incrementGetCount(String code);
+
+    @Query(nativeQuery = true, value = "select count(*) as res from link where created_at>=?")
+    Integer getCreatedCount(Timestamp since);
 }

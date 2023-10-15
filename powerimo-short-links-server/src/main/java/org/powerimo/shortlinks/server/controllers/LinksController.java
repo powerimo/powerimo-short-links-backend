@@ -1,5 +1,6 @@
 package org.powerimo.shortlinks.server.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
@@ -27,9 +28,10 @@ public class LinksController {
 
 
     @GetMapping("{code}")
-    public void getLink(HttpServletResponse response,
+    public void getLink(HttpServletRequest request,
+                        HttpServletResponse response,
                         @PathVariable String code) throws IOException {
-        var real = linkService.getRealLink(code);
+        var real = linkService.hitLink(code, request);
         response.sendRedirect(real);
     }
 }

@@ -1,14 +1,21 @@
 app:
   domain: http://localhost:8080
+  ttl: 30
+  stat-interval: 5
 
 spring:
   liquibase:
     change-log: classpath:/db/liquibase/changeset.xml
   jpa:
     open-in-view: false
+    show-sql: true
 
 graylog:
   app-id: short-links-server
   env: dev
   host: 127.0.0.1
   port: 1111
+
+logging:
+  level:
+    org.powerimo: trace
