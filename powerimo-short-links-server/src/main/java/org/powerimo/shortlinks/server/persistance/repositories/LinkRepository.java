@@ -19,4 +19,8 @@ public interface LinkRepository extends CrudRepository<LinkEntity, String> {
 
     @Query(nativeQuery = true, value = "select count(*) as res from link where created_at>=?")
     Integer getCreatedCount(Timestamp since);
+
+    @Query(nativeQuery = true, value = "delete from link where expired_at <= ?")
+    @Modifying
+    void deleteExpiredLinks(Timestamp maxDate);
 }

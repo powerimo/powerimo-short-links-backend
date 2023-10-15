@@ -23,6 +23,9 @@ public class AppConfig {
     @Value("${app.stat-interval:5}")
     private int statInterval;
 
+    @Value("${app.cleanup:true}")
+    private boolean cleanupEnabled;
+
     @Bean(name = "applicationEventMulticaster")
     public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
         SimpleApplicationEventMulticaster eventMulticaster = new SimpleApplicationEventMulticaster();

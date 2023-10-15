@@ -6,6 +6,7 @@ import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.dto.StatResponse;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkHitRepository;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkRepository;
+import org.powerimo.shortlinks.server.support.AppUtils;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -44,13 +45,8 @@ public class StatService {
         return response;
     }
 
-    public static Timestamp utcTimestamp(Instant date) {
-        var d = date.atZone(ZoneOffset.UTC);
-        return Timestamp.valueOf(d.toLocalDateTime());
-    }
-
     public static Timestamp utcSinceShiftedMinutes(int intervalMinutes) {
-        return utcTimestamp(Instant.now().minus(intervalMinutes, ChronoUnit.MINUTES));
+        return AppUtils.utcTimestamp(Instant.now().minus(intervalMinutes, ChronoUnit.MINUTES));
     }
 
 }

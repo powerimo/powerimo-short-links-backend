@@ -1,6 +1,7 @@
 app:
   domain: http://localhost:8080
   ttl: 30
+  cleanup: true
   stat-interval: 5
 
 spring:

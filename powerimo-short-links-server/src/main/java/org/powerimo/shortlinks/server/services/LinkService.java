@@ -14,6 +14,7 @@ import org.powerimo.shortlinks.server.persistance.entities.LinkEntity;
 import org.powerimo.shortlinks.server.persistance.entities.LinkHitEntity;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkHitRepository;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkRepository;
+import org.powerimo.shortlinks.server.support.AppUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.lang.NonNullApi;
@@ -209,6 +210,23 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
         log.trace("LinkHitEvent: {}", event);
         addHitLinkEntity(event.getCode(), event.getAgentString(), event.getRemoteHost());
         linkRepository.incrementGetCount(event.getCode());
+    }
+
+    public void cleanupExpired(String trigger) {
+        log.debug("cleanupExpired: trigger={}; app.cleanup={}", trigger, appConfig.isCleanupEnabled());
+        if (!appConfig.isCleanupEnabled()) {
+            log.debug("Cleanup (app.cleanup) disabled in properties");
+            return;
+        }
+
+        try {
+            var maxDate = AppUtils.utcTimestamp(Instant.now());
+            linkHitRepository.deleteExpiredLinkHits(maxDate);
+            linkRepository.deleteExpiredLinks(maxDate);
+            log.info("Cleanup performed. Expired timestamp: {}", maxDate);
+        } catch (Exception ex) {
+            log.error("Cleanup failed", ex);
+        }
     }
 
 }
