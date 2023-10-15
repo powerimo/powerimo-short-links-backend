@@ -152,7 +152,9 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
         var opt = linkRepository.findFirstByCode(code);
         if (opt.isPresent()) {
             var userAgent = request.getHeader("User-Agent");
-            applicationEventPublisher.publishEvent(new LinkHitEvent(this, code, userAgent, request.getRemoteHost()));
+            var xForwadedFor = request.getHeader("x-forwarded-for");
+            var remoteHost = xForwadedFor != null ? xForwadedFor : request.getRemoteHost();
+            applicationEventPublisher.publishEvent(new LinkHitEvent(this, code, userAgent, remoteHost));
             log.info("link hit: {}", code);
             return opt.get().getUrl();
         } else {
