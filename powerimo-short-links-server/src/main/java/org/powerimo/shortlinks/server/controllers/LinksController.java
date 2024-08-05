@@ -28,10 +28,10 @@ public class LinksController {
         return LinkService.convert(data);
     }
 
-    @GetMapping(AppConst.NOT_FOUND_PATH)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String getNotFound() {
-        return "NOT FOUND";
+    @GetMapping
+    public void getNotFound(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var frontendUrl = request.getRequestURL().toString() + "/frontend";
+        response.sendRedirect(frontendUrl);
     }
 
     @GetMapping("{code}")
