@@ -193,15 +193,17 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
                 .build();
     }
 
-    public static boolean isValidUrl(String url) {
+    public boolean isValidUrl(String url) {
         try {
             // check the string could be used as URL object
             new URL(url);
 
-            return true;
             // check the link contains the correct protocol prefix
-/*            return url.regionMatches(true, 0, "http://", 0, 7) ||
-                    url.regionMatches(true, 0, "https://", 0, 8);*/
+            if (appConfig.isOnlyHyperlinks()) {
+                return url.regionMatches(true, 0, "http://", 0, 7) ||
+                        url.regionMatches(true, 0, "https://", 0, 8);
+            }
+            return true;
         } catch (MalformedURLException e) {
             return false;
         }

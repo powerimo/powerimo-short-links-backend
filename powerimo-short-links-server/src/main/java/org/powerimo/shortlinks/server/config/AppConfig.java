@@ -26,6 +26,9 @@ public class AppConfig {
     @Value("${app.cleanup:true}")
     private boolean cleanupEnabled;
 
+    @Value("${app.only-hyperlinks:false}")
+    private boolean onlyHyperlinks;
+
     @Bean(name = "applicationEventMulticaster")
     public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
         SimpleApplicationEventMulticaster eventMulticaster = new SimpleApplicationEventMulticaster();
