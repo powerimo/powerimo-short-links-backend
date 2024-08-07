@@ -29,10 +29,17 @@ public class AppConfig {
     @Value("${app.only-hyperlinks:false}")
     private boolean onlyHyperlinks;
 
+    @Value("${app.frontend.path:/app}")
+    private String frontendPath;
+
     @Bean(name = "applicationEventMulticaster")
     public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
         SimpleApplicationEventMulticaster eventMulticaster = new SimpleApplicationEventMulticaster();
         eventMulticaster.setTaskExecutor(new SimpleAsyncTaskExecutor());
         return eventMulticaster;
+    }
+
+    public String getNotFoundPath() {
+        return frontendPath + "/404";
     }
 }

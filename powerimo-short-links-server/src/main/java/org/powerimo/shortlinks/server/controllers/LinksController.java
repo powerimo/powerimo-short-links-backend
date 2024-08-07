@@ -3,10 +3,9 @@ package org.powerimo.shortlinks.server.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.powerimo.shortlinks.server.AppConst;
+import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.services.LinkService;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -16,6 +15,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class LinksController {
     private final LinkService linkService;
+    private final AppConfig appConfig;
 
     @PostMapping
     public String postLink(@RequestBody String url) {
@@ -30,7 +30,7 @@ public class LinksController {
 
     @GetMapping
     public void getNotFound(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var frontendUrl = request.getRequestURL().toString() + "/frontend";
+        var frontendUrl = request.getRequestURL().toString() + appConfig.getFrontendPath();
         response.sendRedirect(frontendUrl);
     }
 

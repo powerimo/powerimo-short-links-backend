@@ -183,7 +183,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
     }
 
     public String noLinkUrl(String code) {
-        return appConfig.getDomain() + "/" + AppConst.NOT_FOUND_PATH;
+        return appConfig.getDomain() + appConfig.getNotFoundPath();
     }
 
     public static LinkRequest convert(LinkEntity entity) {
