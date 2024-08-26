@@ -22,7 +22,7 @@ public class LinkEntity {
     private String code;
     private String url;
     private String urlHash;
-    private Integer ttl;
+    private Long ttl;
     private Instant expiredAt;
     private String host;
     private String identityValue;
@@ -33,4 +33,6 @@ public class LinkEntity {
     @Column(insertable = false, updatable = false)
     private Instant updatedAt;
 
+    private Long hitLimit;
+    private Long hitCount;
 }

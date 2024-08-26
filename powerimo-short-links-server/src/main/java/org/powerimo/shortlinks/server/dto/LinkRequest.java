@@ -7,5 +7,6 @@ import lombok.Data;
 @Builder
 public class LinkRequest {
     private String url;
-    private int ttl;
+    private Long ttl;
+    private Long limitHits;
 }

@@ -13,7 +13,7 @@ public interface LinkRepository extends CrudRepository<LinkEntity, String> {
     Optional<LinkEntity> findFirstByCode(String code);
     Optional<LinkEntity> findFirstByUrlHash(String hash);
 
-    @Query(nativeQuery = true, value = "update link set get_count=get_count+1 where code=?")
+    @Query(nativeQuery = true, value = "update link set hit_count=hit_count+1 where code=?")
     @Modifying
     void incrementGetCount(String code);
 

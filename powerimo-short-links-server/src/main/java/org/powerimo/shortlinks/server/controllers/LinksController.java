@@ -18,8 +18,10 @@ public class LinksController {
     private final AppConfig appConfig;
 
     @PostMapping
-    public String postLink(@RequestBody String url) {
-        return linkService.addLink(url);
+    public String postLink(@RequestBody String url,
+                           @RequestParam(required = false, name = "ttl") Long ttl,
+                           @RequestParam(required = false, name = "limit_hits") Long limitHits) {
+        return linkService.addLink(url, ttl, limitHits);
     }
 
     @PostMapping("request")

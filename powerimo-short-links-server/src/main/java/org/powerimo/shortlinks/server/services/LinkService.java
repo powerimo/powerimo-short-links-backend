@@ -6,7 +6,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.powerimo.shortlinks.server.AppConst;
 import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.events.LinkHitEvent;
@@ -18,7 +17,6 @@ import org.powerimo.shortlinks.server.persistance.repositories.LinkRepository;
 import org.powerimo.shortlinks.server.support.AppUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
-import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,10 +40,14 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-    public String addLink(String url) {
+    public String addLink(String url, Long ttl, Long limitHits) {
+        // if TTL is null. default will be applied
+        var effectiveTtl = ttl == null ? appConfig.getDefaultTtl() : ttl;
+
         var data = add(LinkRequest.builder()
                 .url(url)
-                .ttl(appConfig.getDefaultTtl())
+                .ttl(effectiveTtl)
+                .limitHits(limitHits)
                 .build());
         return appConfig.getDomain() + "/" + data.getCode();
     }
@@ -60,7 +62,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
         }
 
         var hash = calculateHash(request.getUrl());
-        log.debug("link hash: {} : {}",hash, request.getUrl() );
+        log.debug("link hash: {} : {}", hash, request.getUrl());
 
         // check the url is exists
         var hashEntityOpt = linkRepository.findFirstByUrlHash(hash);
@@ -80,6 +82,8 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
                 .urlHash(hash)
                 .ttl(request.getTtl())
                 .expiredAt(Instant.now().plus(request.getTtl(), ChronoUnit.SECONDS))
+                .hitCount(0L)
+                .hitLimit(request.getLimitHits())
                 .build();
         entity = linkRepository.save(entity);
         log.info("link entity added: {}", entity);
@@ -139,20 +143,23 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
         return hexString.toString();
     }
 
-    public String getRealLink(String code) {
-        var opt = linkRepository.findFirstByCode(code);
-        if (opt.isPresent()) {
-            linkRepository.incrementGetCount(code);
-            log.info("link get: {}", code);
-            return opt.get().getUrl();
-        } else {
-            return noLinkUrl(code);
-        }
-    }
-
     public String hitLink(String code, HttpServletRequest request) {
         var opt = linkRepository.findFirstByCode(code);
         if (opt.isPresent()) {
+            var linkEntity = opt.get();
+
+            // check limits
+            if (linkEntity.getExpiredAt().isBefore(Instant.now())) {
+                log.info("Link expired at: {}; LinkCode: {}", linkEntity.getExpiredAt(), code);
+                return noLinkUrl(code);
+                // throw new HitException("Link is expired");
+            }
+            if (linkEntity.getHitLimit() != null && linkEntity.getHitCount() >= linkEntity.getHitLimit()) {
+                log.info("Link hits limit is exhausted: LinkCode: {}", linkEntity.getCode());
+                return noLinkUrl(code);
+                // throw new HitException("Limit hits is exhausted");
+            }
+
             var userAgent = request.getHeader("User-Agent");
             var xForwadedFor = request.getHeader("x-forwarded-for");
             var remoteHost = xForwadedFor != null ? xForwadedFor : request.getRemoteHost();
