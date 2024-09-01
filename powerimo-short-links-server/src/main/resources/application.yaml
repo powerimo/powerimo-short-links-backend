@@ -1,6 +1,6 @@
 app:
   domain: http://localhost:8080
-  ttl: 30
+  ttl: 31536000
   cleanup: true
   stat-interval: 5
 
