@@ -23,7 +23,7 @@ public class LinkEntity {
     private String url;
     private String urlHash;
     private Long ttl;
-    private Instant expiredAt;
+    private Instant expireAt;
     private String host;
     private String identityValue;
 

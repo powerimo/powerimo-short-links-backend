@@ -18,5 +18,8 @@
     <changeSet id="1.01-000" author="voronin">
         <sqlFile path="db/liquibase/v1.01/000/10-tables.sql" splitStatements="false"/>
     </changeSet>
+    <changeSet id="1.01-001" author="voronin">
+        <sqlFile path="db/liquibase/v1.01/001/10-tables.sql" splitStatements="false"/>
+    </changeSet>
 </databaseChangeLog>
 

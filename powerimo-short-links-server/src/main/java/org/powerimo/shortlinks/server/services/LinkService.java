@@ -53,7 +53,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
     }
 
     public LinkEntity add(@NonNull LinkRequest request) {
-        log.debug("link request: {}", request);
+        log.info("link request: {}", request);
         if (request.getUrl() == null)
             throw new InvalidArgument("URL must be not empty");
         request.setUrl(request.getUrl().trim());
@@ -64,7 +64,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
         var hash = calculateHash(request.getUrl());
         log.debug("link hash: {} : {}", hash, request.getUrl());
 
-        // check the url is exists
+        // check the url exist
         var hashEntityOpt = linkRepository.findFirstByUrlHash(hash);
         log.info("link exists: {} by hash: {}", hashEntityOpt.isPresent(), hash);
         if (hashEntityOpt.isPresent()) {
@@ -73,6 +73,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
 
         var code = createCode();
         if (request.getTtl() == 0) {
+            log.debug("TTL is not specified. Default TTL will be used: {}. Request={}", appConfig.getDefaultTtl(), request);
             request.setTtl(appConfig.getDefaultTtl());
         }
 
@@ -81,7 +82,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
                 .url(request.getUrl())
                 .urlHash(hash)
                 .ttl(request.getTtl())
-                .expiredAt(Instant.now().plus(request.getTtl(), ChronoUnit.SECONDS))
+                .expireAt(Instant.now().plus(request.getTtl(), ChronoUnit.SECONDS))
                 .hitCount(0L)
                 .hitLimit(request.getLimitHits())
                 .build();
@@ -113,7 +114,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
 
     public String generateCode() {
         SecureRandom random = new SecureRandom();
-        int length = random.nextInt(8) + 1; // Длина строки от 1 до 8
+        int length = random.nextInt(8) + 4; // Длина строки от 4 до 12
         StringBuilder sb = new StringBuilder(length);
 
         for (int i = 0; i < length; i++) {
@@ -149,8 +150,8 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
             var linkEntity = opt.get();
 
             // check limits
-            if (linkEntity.getExpiredAt().isBefore(Instant.now())) {
-                log.info("Link expired at: {}; LinkCode: {}", linkEntity.getExpiredAt(), code);
+            if (linkEntity.getExpireAt().isBefore(Instant.now())) {
+                log.info("Link expired at: {}; LinkCode: {}", linkEntity.getExpireAt(), code);
                 return noLinkUrl(code);
                 // throw new HitException("Link is expired");
             }
