@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.powerimo.shortlinks.server.dto.LinkInfo;
 
 import java.time.Instant;
 
@@ -35,4 +36,17 @@ public class LinkEntity {
 
     private Long hitLimit;
     private Long hitCount;
+
+    public LinkInfo asLinkInfo() {
+        return LinkInfo.builder()
+                .hitCount(this.hitCount)
+                .hitLimit(this.hitLimit)
+                .code(this.code)
+                .expireAt(this.expireAt)
+                .createdAt(this.createdAt)
+                .url(this.url)
+                .ttl(this.ttl)
+                .hitLimit(this.hitLimit)
+                .build();
+    }
 }

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.services.LinkService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -42,6 +43,17 @@ public class LinksController {
                         @PathVariable String code) throws IOException {
         var real = linkService.hitLink(code, request);
         response.sendRedirect(real);
+    }
+
+    @GetMapping("info/{code}")
+    public ResponseEntity<?> getInfoCode(HttpServletRequest request,
+                                      @PathVariable String code) throws IOException {
+        try {
+            var data = linkService.getLinkInfo(code);
+            return ResponseEntity.ok(data);
+        } catch (Exception ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }

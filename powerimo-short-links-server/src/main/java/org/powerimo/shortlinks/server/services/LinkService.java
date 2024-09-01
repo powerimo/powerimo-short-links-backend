@@ -7,9 +7,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.powerimo.shortlinks.server.config.AppConfig;
+import org.powerimo.shortlinks.server.dto.LinkInfo;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.events.LinkHitEvent;
 import org.powerimo.shortlinks.server.exceptions.InvalidArgument;
+import org.powerimo.shortlinks.server.exceptions.NotFoundException;
 import org.powerimo.shortlinks.server.persistance.entities.LinkEntity;
 import org.powerimo.shortlinks.server.persistance.entities.LinkHitEntity;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkHitRepository;
@@ -239,6 +241,11 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
         } catch (Exception ex) {
             log.error("Cleanup failed", ex);
         }
+    }
+
+    public LinkInfo getLinkInfo(@NonNull String code) {
+        var entity = linkRepository.findFirstByCode(code).orElseThrow(() -> new NotFoundException("The link with code " + code + " was not found"));
+        return entity.asLinkInfo();
     }
 
 }
