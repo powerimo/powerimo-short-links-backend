@@ -3,6 +3,7 @@ app:
   ttl: 31536000
   cleanup: true
   stat-interval: 5
+  generator-class: org.powerimo.shortlinks.server.generators.StringCodeGenerator
 
 spring:
   liquibase:

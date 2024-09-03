@@ -3,6 +3,7 @@ package org.powerimo.shortlinks.server.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.powerimo.shortlinks.server.config.AppConfig;
+import org.powerimo.shortlinks.server.config.AppProperties;
 import org.powerimo.shortlinks.server.dto.StatResponse;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkHitRepository;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkRepository;
@@ -21,6 +22,7 @@ public class StatService {
     private final LinkRepository linkRepository;
     private final LinkHitRepository linkHitRepository;
     private final AppConfig appConfig;
+    private final AppProperties appProperties;
 
     public int getCreatedCount(int intervalMinutes) {
         var t = utcSinceShiftedMinutes(intervalMinutes);
@@ -38,7 +40,7 @@ public class StatService {
 
     public StatResponse getSnapshot() {
         StatResponse response = new StatResponse();
-        var interval = appConfig.getStatInterval();
+        var interval = appProperties.getStatInterval();
         response.setLinkCreated(getCreatedCount(interval));
         response.setLinkHits(getRedirectsCount(interval));
         log.trace("stat snapshot created: interval={}, data={}", interval, response);

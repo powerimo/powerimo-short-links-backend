@@ -7,11 +7,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.powerimo.shortlinks.server.config.AppConfig;
+import org.powerimo.shortlinks.server.config.AppProperties;
 import org.powerimo.shortlinks.server.dto.LinkInfo;
 import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.events.LinkHitEvent;
 import org.powerimo.shortlinks.server.exceptions.InvalidArgument;
 import org.powerimo.shortlinks.server.exceptions.NotFoundException;
+import org.powerimo.shortlinks.server.generators.CodeGenerator;
 import org.powerimo.shortlinks.server.persistance.entities.LinkEntity;
 import org.powerimo.shortlinks.server.persistance.entities.LinkHitEntity;
 import org.powerimo.shortlinks.server.persistance.repositories.LinkHitRepository;
@@ -26,7 +28,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -39,8 +40,8 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
     private final LinkRepository linkRepository;
     private final LinkHitRepository linkHitRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
-
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private final CodeGenerator codeGenerator;
+    private final AppProperties appProperties;
 
     public String addLink(String url, Long ttl, Long limitHits) {
         // if TTL is null. default will be applied
@@ -51,7 +52,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
                 .ttl(effectiveTtl)
                 .limitHits(limitHits)
                 .build());
-        return appConfig.getDomain() + "/" + data.getCode();
+        return appProperties.getDomain() + "/" + data.getCode();
     }
 
     public LinkEntity add(@NonNull LinkRequest request) {
@@ -73,7 +74,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
             return hashEntityOpt.get();
         }
 
-        var code = createCode();
+        var code = createCode(request.getUrl());
         if (request.getTtl() == 0) {
             log.debug("TTL is not specified. Default TTL will be used: {}. Request={}", appConfig.getDefaultTtl(), request);
             request.setTtl(appConfig.getDefaultTtl());
@@ -93,14 +94,14 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
         return entity;
     }
 
-    public String createCode() {
+    public String createCode(String url) {
         int tryCount = 0;
         boolean isFree = false;
         String code = null;
 
         while (tryCount < 100 && !isFree) {
             tryCount++;
-            code = generateCode();
+            code = codeGenerator.generate(url);
             isFree = linkRepository.findFirstByCode(code).isEmpty();
             log.debug("code generation: attempt={}; code={}; isFree={}", code, tryCount, isFree);
         }
@@ -112,19 +113,6 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
             throw new RuntimeException("Exception on generation code: code is null");
 
         return code;
-    }
-
-    public String generateCode() {
-        SecureRandom random = new SecureRandom();
-        int length = random.nextInt(8) + 4; // Длина строки от 4 до 12
-        StringBuilder sb = new StringBuilder(length);
-
-        for (int i = 0; i < length; i++) {
-            int index = random.nextInt(CHARACTERS.length());
-            sb.append(CHARACTERS.charAt(index));
-        }
-
-        return sb.toString();
     }
 
     @SneakyThrows
@@ -146,6 +134,12 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
         return hexString.toString();
     }
 
+    /**
+     * Method returns URL and register thi link hit. If the code is not found redirects to noLinkUrl method result.
+     * @param code the link code
+     * @param request ServletRequest from the controller
+     * @return the URL of the link or noLinkUrl method result
+     */
     public String hitLink(String code, HttpServletRequest request) {
         var opt = linkRepository.findFirstByCode(code);
         if (opt.isPresent()) {
@@ -155,17 +149,14 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
             if (linkEntity.getExpireAt().isBefore(Instant.now())) {
                 log.info("Link expired at: {}; LinkCode: {}", linkEntity.getExpireAt(), code);
                 return noLinkUrl(code);
-                // throw new HitException("Link is expired");
             }
             if (linkEntity.getHitLimit() != null && linkEntity.getHitCount() >= linkEntity.getHitLimit()) {
                 log.info("Link hits limit is exhausted: LinkCode: {}", linkEntity.getCode());
                 return noLinkUrl(code);
-                // throw new HitException("Limit hits is exhausted");
             }
 
-            var userAgent = request.getHeader("User-Agent");
-            var xForwadedFor = request.getHeader("x-forwarded-for");
-            var remoteHost = xForwadedFor != null ? xForwadedFor : request.getRemoteHost();
+            var userAgent = AppUtils.extractBrowserString(request);
+            var remoteHost = AppUtils.extractRemoteIp(request);
             applicationEventPublisher.publishEvent(new LinkHitEvent(this, code, userAgent, remoteHost));
             log.info("link hit: {}", code);
             return opt.get().getUrl();
@@ -193,7 +184,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
     }
 
     public String noLinkUrl(String code) {
-        return appConfig.getDomain() + appConfig.getNotFoundPath();
+        return appProperties.getDomain() + appConfig.getNotFoundPath();
     }
 
     public static LinkRequest convert(LinkEntity entity) {
@@ -209,7 +200,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
             new URL(url);
 
             // check the link contains the correct protocol prefix
-            if (appConfig.isOnlyHyperlinks()) {
+            if (appProperties.isOnlyHyperlinks()) {
                 return url.regionMatches(true, 0, "http://", 0, 7) ||
                         url.regionMatches(true, 0, "https://", 0, 8);
             }
@@ -227,8 +218,8 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
     }
 
     public void cleanupExpired(String trigger) {
-        log.debug("cleanupExpired: trigger={}; app.cleanup={}", trigger, appConfig.isCleanupEnabled());
-        if (!appConfig.isCleanupEnabled()) {
+        log.debug("cleanupExpired: trigger={}; app.cleanup={}", trigger, appProperties.isCleanup());
+        if (!appProperties.isCleanup()) {
             log.debug("Cleanup (app.cleanup) disabled in properties");
             return;
         }
