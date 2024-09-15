@@ -66,7 +66,7 @@ pipeline {
                     def tag2 = "${env.BRANCH_NAME == 'qa' ? 'qa' : env.BRANCH_VERSION}"
                     def dockerImage = "$IMAGE_NAME:$tag"
                     def dockerImage2 = "$IMAGE_NAME:$tag2"
-                    sh "docker build -t ${dockerImage} -t ${dockerImage2} ."
+                    sh "docker build -t ${dockerImage} -t ${dockerImage2} ./powerimo-short-links-server/Dockerfile"
                     sh "docker push ${dockerImage}"
                     sh "docker push ${dockerImage2}"
                 }
