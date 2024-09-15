@@ -43,6 +43,19 @@
             <artifactId>spring-boot-actuator</artifactId>
             <version>${spring-boot.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring-boot.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- OpenAPI support -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.7.0</version>
+        </dependency>
 
         <dependency>
             <groupId>org.liquibase</groupId>
@@ -64,14 +77,21 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.4.11</version>
+            <version>1.4.12</version>
         </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.6.0</version>
+            <version>42.7.2</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.3.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
