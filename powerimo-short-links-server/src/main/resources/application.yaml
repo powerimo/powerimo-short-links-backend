@@ -21,3 +21,6 @@ graylog:
 logging:
   level:
     org.powerimo: trace
+
+
+
