@@ -44,7 +44,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh 'mvn -B -DskipTests=true clean compile package'
+                sh 'mvn -B clean compile package'
             }
         }
         stage("Deploy artifacts to Nexus") {
