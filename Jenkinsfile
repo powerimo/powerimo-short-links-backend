@@ -80,7 +80,7 @@ pipeline {
             }
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'deployagent', keyFileVariable: 'SSH_I', passphraseVariable: '', usernameVariable: 'SSH_USER_NAME')]) {
-                    sh 'scp -o StrictHostKeyChecking=no -P $SSH_PORT -i $SSH_I cicd/scripts/deploy.sh $SSH_USER_NAME@${HOST_PROD}:~/bin/deploy-powerimo-short-links-server-prod.sh'
+                    sh 'scp -o StrictHostKeyChecking=no -P $SSH_PORT -i $SSH_I cicd/scripts/deploy-server.sh $SSH_USER_NAME@${HOST_PROD}:~/bin/deploy-powerimo-short-links-server-prod.sh'
                     sh 'ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i $SSH_I $SSH_USER_NAME@${HOST_PROD} "chmod +x ~/bin/deploy-powerimo-short-links-server-prod.sh"'
                     sh 'ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i $SSH_I $SSH_USER_NAME@${HOST_PROD} ./deploy-short-links-server-prod.sh'
                 }
