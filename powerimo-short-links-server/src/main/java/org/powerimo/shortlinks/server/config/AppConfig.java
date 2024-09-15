@@ -16,6 +16,8 @@ import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
+import java.util.Collection;
+
 @Configuration
 @Slf4j
 @Getter
