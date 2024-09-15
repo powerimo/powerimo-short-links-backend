@@ -1,9 +1,26 @@
 pipeline {
     environment {
-        DOCKER_REPO = "docker-repo.andewil.com"
-        IMG_SERVER = "${DOCKER_REPO}/shortlinks/server"
-        MAJOR_VERSION="1.0"
-        BUILD_VERSION="${MAJOR_VERSION}.${BUILD_NUMBER}"
+        // Docker repository
+        DOCKER_REPO = "${env.DOCKER_REPO_PREFIX}"
+
+        // Server image name
+        IMAGE_NAME = "${DOCKER_REPO}/powerimo/short-links-server"
+
+        // Full branch name e.g. PWR-105
+        FULL_PATH_BRANCH = "${env.BRANCH_NAME}"
+
+        // Extracted version from the branch (e.g. '1.0.0' from the branch 'release/1.0.0')
+        BRANCH_VERSION = "${env.BRANCH_NAME}".tokenize('/').last()
+
+        // Commit code
+        GIT_COMMIT_SHORT = "${env.GIT_COMMIT.take(7)}"
+
+        // Notifications API Key
+        NSS_API_KEY = credentials('powerimo-nss-api-key')
+
+        // Deployment host parameters
+        SSH_PORT = "${SSH_DEFAULT_PORT}"
+        HOST_PROD = "${POWERIMO_HOST_PROD}"
     }
 
     tools{
@@ -22,7 +39,7 @@ pipeline {
                 sh 'echo PATH=${PATH}'
                 sh 'echo M2_HOME=${M2_HOME}'
                 sh 'echo BUILD_VERSION=${BUILD_VERSION}'
-                sh 'echo IMG_SERVER=${IMG_SERVER}'
+                sh 'echo IMAGE_NAME=${IMAGE_NAME}'
             }
         }
         stage('Build') {
@@ -39,33 +56,40 @@ pipeline {
         }
         stage('Docker images') {
             when {
-                branch 'master'
+                anyOf {
+                    branch 'qa'
+                    branch pattern: "release/.*", comparator: "REGEXP"
+                }
             }
             steps {
-                sh 'echo ${IMG_SERVER}:$BUILD_VERSION'
-                sh 'docker build -t ${IMG_SERVER}:$BUILD_VERSION -t ${IMG_SERVER}:${MAJOR_VERSION} ./powerimo-short-links-server'
-                sh 'docker push ${IMG_SERVER}:$BUILD_VERSION'
-                sh 'docker push ${IMG_SERVER}:${MAJOR_VERSION} '
+                def tag = "${env.BRANCH_NAME == 'qa' ? 'qa' : env.BRANCH_VERSION}-${GIT_COMMIT_SHORT}"
+                def tag2 = "${env.BRANCH_NAME == 'qa' ? 'qa' : env.BRANCH_VERSION}"
+                def dockerImage = "$IMAGE_NAME:$tag"
+                def dockerImage2 = "$IMAGE_NAME:$tag2"
+                sh "docker build -t ${dockerImage} -t ${dockerImage2} ."
+                sh "docker push ${dockerImage}"
+                sh "docker push ${dockerImage2}"
             }
         }
         stage('Deploy') {
             when {
-                branch 'master'
+                anyOf {
+                    branch pattern: "release/.*", comparator: "REGEXP"
+                }
             }
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'deployagent', keyFileVariable: 'SSH_I', passphraseVariable: '', usernameVariable: 'SSH_USER_NAME')]) {
-                    sh 'ssh -o StrictHostKeyChecking=no -p 40220 -i $SSH_I $SSH_USER_NAME@app.andewil.com ./deploy-short-links-server-prod.sh'
+                    sh 'scp -o StrictHostKeyChecking=no -P $SSH_PORT -i $SSH_I cicd/scripts/deploy.sh $SSH_USER_NAME@${HOST_PROD}:~/bin/deploy-powerimo-short-links-server-prod.sh'
+                    sh 'ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i $SSH_I $SSH_USER_NAME@${HOST_PROD} "chmod +x ~/bin/deploy-powerimo-short-links-server-prod.sh"'
+                    sh 'ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i $SSH_I $SSH_USER_NAME@${HOST_PROD} ./deploy-short-links-server-prod.sh'
                 }
             }
         }
     }
 
     post {
-        success {
-            sh '/var/jenkins_home/deployscripts/send-message.sh Jenkins "Job <b>$JOB_NAME</b> was completed and artifacts were deployed. Build version: <b>$BUILD_VERSION</b>. Author: $CHANGE_AUTHOR($CHANGE_AUTHOR_EMAIL)" '
-        }
-        failure {
-            sh '/var/jenkins_home/deployscripts/send-message.sh Jenkins "Job <b>$JOB_NAME</b> failed. Build version: <b>$BUILD_VERSION</b> Author: $CHANGE_AUTHOR($CHANGE_AUTHOR_EMAIL)" '
+        always {
+            nssSendJobResult(recipients: "AndewilEventsChannel")
         }
     }
 
