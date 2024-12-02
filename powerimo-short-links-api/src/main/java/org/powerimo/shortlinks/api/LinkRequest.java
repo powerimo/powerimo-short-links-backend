@@ -1,4 +1,4 @@
-package org.powerimo.shortlinks.server.dto;
+package org.powerimo.shortlinks.api;
 
 import lombok.Builder;
 import lombok.Data;

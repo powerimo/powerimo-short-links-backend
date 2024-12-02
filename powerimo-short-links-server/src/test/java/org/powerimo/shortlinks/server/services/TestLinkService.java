@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.powerimo.shortlinks.api.LinkRequest;
 import org.powerimo.shortlinks.server.config.AppConfig;
 import org.powerimo.shortlinks.server.config.AppProperties;
-import org.powerimo.shortlinks.server.dto.LinkRequest;
 import org.powerimo.shortlinks.server.exceptions.InvalidArgument;
 import org.powerimo.shortlinks.server.generators.CodeGenerator;
 import org.powerimo.shortlinks.server.generators.UuidCodeGenerator;
@@ -18,7 +18,6 @@ import org.powerimo.shortlinks.server.persistance.repositories.LinkRepository;
 import org.springframework.context.ApplicationEventPublisher;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
