@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class AppProperties {
-    private String domain;
+    private String baseUrl;
     private Long ttl = 60 * 60 * 24 * 365L;
     private String generatorClass = StringCodeGenerator.class.getCanonicalName();
     private boolean cleanup = true;

@@ -1,0 +1,3 @@
+spring:
+  datasource:
+    url: jdbc:postgres://localhost:5432/powerimo-short-links-dev
