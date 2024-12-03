@@ -52,7 +52,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
                 .ttl(effectiveTtl)
                 .limitHits(limitHits)
                 .build());
-        return appProperties.getDomain() + "/" + data.getCode();
+        return appProperties.getBaseUrl() + "/" + data.getCode();
     }
 
     public LinkEntity add(@NonNull LinkRequest request) {
@@ -184,7 +184,7 @@ public class LinkService implements ApplicationListener<LinkHitEvent> {
     }
 
     public String noLinkUrl(String code) {
-        return appProperties.getDomain() + appConfig.getNotFoundPath();
+        return appProperties.getBaseUrl() + appConfig.getNotFoundPath();
     }
 
     public static LinkRequest convert(LinkEntity entity) {
