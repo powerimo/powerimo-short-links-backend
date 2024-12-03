@@ -3,6 +3,7 @@ ARG APP_FILE=target/*.jar
 
 ENV JAVA_TOOL_OPTS="-Xms128m -Xmx128m"
 ENV SERVER_PORT=8080
+ENV APP_BASE_URL=http://localhost:3000
 
 RUN mkdir /app
 

@@ -4,19 +4,15 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.powerimo.shortlinks.server.exceptions.InvalidArgument;
 import org.powerimo.shortlinks.server.exceptions.InvalidConfigProperty;
 import org.powerimo.shortlinks.server.generators.CodeGenerator;
 import org.powerimo.shortlinks.server.generators.StringCodeGenerator;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
-
-import java.util.Collection;
 
 @Configuration
 @Slf4j
@@ -28,7 +24,7 @@ public class AppConfig {
 
     @PostConstruct
     public void init() {
-        log.info("Domain: {}", appProperties.getDomain());
+        log.info("Base URL: {}", appProperties.getBaseUrl());
         log.info("Frontend context path: {}", appProperties.getFrontendContextPath());
         log.info("Default TTL: {}", appProperties.getTtl());
     }

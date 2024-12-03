@@ -1,11 +1,13 @@
 app:
-  domain: http://localhost:8080
   ttl: 31536000
   cleanup: true
   stat-interval: 5
   generator-class: org.powerimo.shortlinks.server.generators.StringCodeGenerator
+  base-url: http://localhost:8080
 
 spring:
+  datasource:
+    url: jdbc:postgres://localhost:5432/powerimo-short-links
   liquibase:
     change-log: classpath:/db/liquibase/changeset.xml
   jpa:
