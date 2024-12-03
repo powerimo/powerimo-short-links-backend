@@ -6,6 +6,8 @@ app:
   base-url: http://localhost:8080
 
 spring:
+  datasource:
+    url: jdbc:postgres://localhost:5432/powerimo-short-links
   liquibase:
     change-log: classpath:/db/liquibase/changeset.xml
   jpa:

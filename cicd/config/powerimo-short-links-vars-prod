@@ -1,5 +1,0 @@
-
-# Backend
-SPRING_DATASOURCE_URL=jdbc:postgres://localhost:5432/sl-dev
-SPRING_DATASOURCE_USERNAME=user
-SPRING_DATASOURCE_PASSWORD=password
